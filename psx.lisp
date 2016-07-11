@@ -28,39 +28,48 @@
 
 
 (defun parse-props (prop-list)
-  (let ((create-form `(create))
-        (children nil))
-    (loop for (p v) on prop-list by #'cddr
-          for met-children = nil
-          do (if met-children
-               (progn 
-                 (push p children)
-                 (when v
-                   (push v children)))
-               (if (null v)
-                 (push p children)
-                 (if (keywordp p)
-                   (progn
-                     (push (make-symbol (string p)) create-form)
-                     (push v create-form))
-                   (progn
-                     (setf met-children t)
-                     (push p children)
-                     (push v children))))))
-    (values
-      (if (> (length create-form) 1)
-        (reverse create-form)
-        nil)
-      (reverse children))))
+  (do* ((create-form `(create))
+        (children nil)
+        (props-to-merge nil)
+        (plist (copy-list prop-list))
+        (p (pop plist) (pop plist)))
+       ((not p) (values (if (> (length create-form) 1)
+                          (reverse create-form)
+                          nil)
+                        (reverse props-to-merge)
+                        (reverse children)))
+    (cond
+      ((keywordp p)
+       (let ((v (pop plist)))
+         (if v
+           (progn
+             (push (make-symbol (string p)) create-form)
+             (push v create-form))
+           (push p children))))
+      ((and (listp p) (keywordp (car p)))
+       (cond
+         ((eql (car p) :|...|)
+          (push (cadr p) props-to-merge))
+         (t
+          (push p children))
+         ))
+      (t
+       (push p children)))))
 
 
 (defun expand-react-element (element-form)
   (if (and (listp element-form) (keywordp (car element-form)))
     (let* ((element-type (car element-form))
            (element-sym (make-symbol (string element-type))))
-      (multiple-value-bind (props children) (parse-props (cdr element-form))
+      (multiple-value-bind (props props-to-merge children) (parse-props (cdr element-form))
         (if (dom-type-p element-type)
-          `(chain *react *d-o-m (,element-sym ,props ,@(mapcar #'expand-react-element children)))
+          (if (> (length props-to-merge) 0)
+            (if props
+              `(chain *react *d-o-m (,element-sym (chain *object (assign (create) ,@props-to-merge ,props))
+                                                  ,@(mapcar #'expand-react-element children)))
+              `(chain *react *d-o-m (,element-sym (chain *object (assign (create) ,@props-to-merge))
+                                                  ,@(mapcar #'expand-react-element children))))
+            `(chain *react *d-o-m (,element-sym ,props ,@(mapcar #'expand-react-element children))))
           `(chain *react (create-element ,element-sym ,props ,@(mapcar #'expand-react-element children))))))
     element-form))
 
