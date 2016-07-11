@@ -1,4 +1,4 @@
-(in-package #:react-examples/basic-commonjs)
+(in-package #:react-examples/basic-jsx)
 
 (let* ((renderCB (lambda ()
                    (let* ((elapsed (round (/ (@ this props elapsed) 100.0)))
