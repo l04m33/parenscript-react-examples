@@ -62,7 +62,7 @@
                          :type "button"
                          :className "close"
                          :onClick (@ this handleCancel)
-                         (decode-entities "&times;"))
+                         (lisp (html-entities:decode-entities "&times;")))
                        (:h3 (@ this props title)))
                       (:div :className "modal-body"
                        (@ this props children))

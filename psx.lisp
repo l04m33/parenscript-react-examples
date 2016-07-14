@@ -1,5 +1,4 @@
 (require :parenscript)
-(require :html-entities)
 
 (in-package #:cl-user)
 
@@ -83,11 +82,3 @@
   (loop for form in body
         collect (expand-react-element form) into px-forms
         finally (return (append `(progn) px-forms))))
-
-
-(defpsmacro encode-entities (html-str)
-  (html-entities:encode-entities html-str))
-
-
-(defpsmacro decode-entities (html-str)
-  (html-entities:decode-entities html-str))

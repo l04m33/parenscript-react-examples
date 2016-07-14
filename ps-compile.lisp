@@ -1,4 +1,5 @@
 (require :parenscript)
+(require :html-entities)
 
 (in-package #:cl-user)
 
