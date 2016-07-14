@@ -73,7 +73,9 @@
               `(chain *react *d-o-m (,element-sym (chain *object (assign (create) ,@props-to-merge))
                                                   ,@(mapcar #'expand-react-element children))))
             `(chain *react *d-o-m (,element-sym ,props ,@(mapcar #'expand-react-element children))))
-          `(chain *react (create-element ,element-sym ,props ,@(mapcar #'expand-react-element children))))))
+          (if (upper-case-p (elt (string element-type) 0))
+            `(chain *react (create-element ,element-sym ,props ,@(mapcar #'expand-react-element children)))
+            `(chain *react (create-element ,(string element-type) ,props ,@(mapcar #'expand-react-element children)))))))
     element-form))
 
 
